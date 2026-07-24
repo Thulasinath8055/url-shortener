@@ -1,0 +1,20 @@
+# Core Framework
+Django==5.0.6
+
+# REST API Framework
+djangorestframework==3.15.1
+
+# JWT Authentication
+djangorestframework-simplejwt==5.3.1
+
+# PostgreSQL Adapter
+psycopg2-binary==2.9.9
+
+# Environment Variables
+python-dotenv==1.0.1
+
+# Swagger / API Documentation
+drf-spectacular==0.27.2
+
+# Production WSGI Server
+gunicorn==22.0.0
