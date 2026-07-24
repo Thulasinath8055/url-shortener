@@ -1,23 +1,38 @@
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from accounts.views import RegisterView
 
 """
 Project-level URL routing table.
 
-We keep this file minimal. Later, each app (accounts, urls) will define its own
-urls.py, and we will 'include()' them here. For now, we just wire up the admin
-and automatic Swagger documentation so we can verify our setup.
+Order matters: Django checks each pattern top-to-bottom until it finds a match.
+/admin/ and /api/ are matched before the root-level short code redirect.
 """
 
 urlpatterns = [
-    # Django Admin panel
+    # Django Admin
     path('admin/', admin.site.urls),
 
-    # Raw OpenAPI 3.0 schema (JSON). drf-spectacular generates this automatically.
-    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+    # -------------------------------------------------------------
+    # AUTHENTICATION ENDPOINTS
+    # -------------------------------------------------------------
+    # We define these directly here (instead of include()) to ensure
+    # they live exactly at /api/register/, /api/login/, etc.
+    path('api/register/', RegisterView.as_view(), name='register'),
+    path('api/login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 
-    # Human-friendly Swagger UI. It reads the schema above and renders it.
-    # 'url_name='schema'' links this view to the /api/schema/ endpoint.
+    # -------------------------------------------------------------
+    # URL SHORTENER APP
+    # -------------------------------------------------------------
+    # Includes /api/urls/ and /<short_code>/ from urls/urls.py
+    path('', include('urls.urls')),
+
+    # -------------------------------------------------------------
+    # API DOCUMENTATION (Swagger)
+    # -------------------------------------------------------------
+    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
 ]
