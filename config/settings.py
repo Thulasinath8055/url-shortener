@@ -5,6 +5,7 @@ Django settings for URL Shortener project.
 import os
 from datetime import timedelta
 from pathlib import Path
+from decouple import config, Csv
 from dotenv import load_dotenv
 
 # ============================================================================
@@ -34,7 +35,7 @@ DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
 
 # Which hosts/IPs can serve this Django site.
 # We parse the comma-separated string from .env into a Python list.
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost').split(',')
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost', cast=Csv())
 
 # ============================================================================
 # 3. APPLICATION DEFINITION
@@ -87,7 +88,7 @@ ROOT_URLCONF = 'config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],                       # Custom template folders (none yet)
+        'DIRS': [BASE_DIR / 'templates'],                       # Custom template folders (none yet)
         'APP_DIRS': True,                 # Look inside each app's templates/ folder
         'OPTIONS': {
             'context_processors': [
@@ -103,22 +104,25 @@ TEMPLATES = [
 # Entry point for WSGI-compatible web servers (Gunicorn in production).
 WSGI_APPLICATION = 'config.wsgi.application'
 
-# ============================================================================
-# 4. DATABASE CONFIGURATION (PostgreSQL)
-# ============================================================================
+# Try DATABASE_URL first (Render sets this), fallback to individual vars
+DATABASE_URL = config('DATABASE_URL', default=None)
 
-# We replace Django's default SQLite with PostgreSQL.
-# psycopg2-binary is the adapter that translates Python DB calls to Postgres.
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME'),
-        'USER': os.getenv('DB_USER'),
-        'PASSWORD': os.getenv('DB_PASSWORD'),
-        'HOST': os.getenv('DB_HOST'),     # 'localhost' locally, 'db' inside Docker
-        'PORT': os.getenv('DB_PORT'),
+if DATABASE_URL:
+    import dj_database_url
+    DATABASES = {
+        'default': dj_database_url.parse(DATABASE_URL)
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('DB_NAME'),
+            'USER': os.getenv('DB_USER'),
+            'PASSWORD': os.getenv('DB_PASSWORD'),
+            'HOST': os.getenv('DB_HOST'),
+            'PORT': os.getenv('DB_PORT'),
+        }
+    }
 
 # ============================================================================
 # 5. PASSWORD VALIDATION
@@ -151,6 +155,7 @@ USE_TZ = True                 # Use timezone-aware datetimes (best practice)
 
 # URL to serve static files (CSS, JS) from. Used by admin and browsable API.
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Default primary key type. 'BigAutoField' is 64-bit (supports more rows).
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

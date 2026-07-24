@@ -3,6 +3,7 @@ from django.urls import path, include
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from accounts.views import RegisterView
+from .views import LandingPageView
 
 """
 Project-level URL routing table.
@@ -24,6 +25,8 @@ urlpatterns = [
     path('api/login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 
+    # landing page
+    path('', LandingPageView.as_view(), name='landing'),
     # -------------------------------------------------------------
     # URL SHORTENER APP
     # -------------------------------------------------------------
